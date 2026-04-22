@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supply Chain Calculator</title>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.05rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.35rem);
+      --text-xl: clamp(1.45rem, 1.15rem + 1vw, 2rem);
+      --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem;
+      --color-bg: #f4f2ee; --color-surface: #faf9f6; --color-surface-2: #ffffff; --color-surface-offset: #efebe5; --color-border: #d7d2ca; --color-divider: #e2ddd6;
+      --color-text: #26231c; --color-text-muted: #68655f; --color-text-faint: #9a968f; --color-text-inverse: #fbfaf7;
+      --color-primary: #0d6469; --color-primary-hover: #0b4c50; --color-primary-highlight: #d8e9e7; --color-blue: #1f6fa8; --color-success: #4c7b2a; --color-error: #8f3e68; --color-warning: #9a5a1e;
+      --radius-sm: .4rem; --radius-md: .65rem; --radius-lg: .95rem; --radius-xl: 1.2rem; --radius-full: 999px;
+      --shadow-sm: 0 1px 2px rgba(21,22,18,.05), 0 6px 18px rgba(21,22,18,.03);
+      --shadow-md: 0 4px 16px rgba(21,22,18,.06), 0 14px 36px rgba(21,22,18,.06);
+      --shadow-lg: 0 10px 28px rgba(21,22,18,.08), 0 24px 64px rgba(21,22,18,.08);
+      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+      --font-body: 'Satoshi', system-ui, sans-serif;
+      --content: 1460px;
+    }
+    [data-theme="dark"] {
+      --color-bg: #161513; --color-surface: #1c1b19; --color-surface-2: #22211f; --color-surface-offset: #282725; --color-border: #353432; --color-divider: #2d2c2a;
+      --color-text: #d8d5cf; --color-text-muted: #aaa59c; --color-text-faint: #7d7a74; --color-text-inverse: #181715;
+      --color-primary: #58a2ac; --color-primary-hover: #7fbac2; --color-primary-highlight: #24373a; --color-blue: #6fa9d9; --color-success: #80b45e; --color-error: #d37fb0; --color-warning: #d0914e;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.22); --shadow-md: 0 4px 16px rgba(0,0,0,.28); --shadow-lg: 0 10px 28px rgba(0,0,0,.34);
+    }
+    *,:before,:after{box-sizing:border-box}
+    html,body{height:100%;margin:0;overflow:hidden}
+    body{font-family:var(--font-body);font-size:var(--text-base);line-height:1.5;color:var(--color-text);background:radial-gradient(circle at top right,color-mix(in srgb,var(--color-primary) 8%,transparent),transparent 28%),var(--color-bg)}
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    .skip-link{position:absolute;left:-9999px}.skip-link:focus{left:var(--space-4);top:var(--space-4);z-index:1000;background:var(--color-primary);color:var(--color-text-inverse);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md)}
+    .dashboard{display:grid;grid-template-columns:290px 1fr;grid-template-rows:auto 1fr;height:100dvh;max-width:var(--content);margin:0 auto}
+    .sidebar{grid-row:1/-1;background:color-mix(in srgb,var(--color-surface) 94%,transparent);border-right:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);padding:var(--space-5);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:var(--space-5)}
+    .header{grid-column:2;display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-5);border-bottom:1px solid color-mix(in srgb,var(--color-text) 8%,transparent);background:color-mix(in srgb,var(--color-bg) 88%,transparent);backdrop-filter:blur(18px);position:sticky;top:0;z-index:10}
+    .main{grid-column:2;overflow-y:auto;overscroll-behavior:contain;padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-5)}
+    .brand{display:flex;align-items:center;gap:var(--space-3)}
+    .brand svg{width:2rem;height:2rem;color:var(--color-primary)}
+    .brand h1{font-size:var(--text-lg);margin:0;letter-spacing:-.03em}
+    .brand p,.subtle{margin:0;color:var(--color-text-muted);font-size:var(--text-sm)}
+    .header-actions{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
+    .theme-toggle,.icon-btn{min-width:44px;min-height:44px;border-radius:var(--radius-full);border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent);background:var(--color-surface-2);display:grid;place-items:center}
+    .hero{display:grid;grid-template-columns:1.3fr .9fr;gap:var(--space-5)}
+    .card,.panel,.result-card,.step-card,.table-card{background:color-mix(in srgb,var(--color-surface) 96%,transparent);border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);border-radius:var(--radius-xl);box-shadow:var(--shadow-md)}
+    .hero .card,.panel,.result-card,.step-card,.table-card{padding:var(--space-5)}
+    .hero h2{font-size:var(--text-xl);line-height:1.04;letter-spacing:-.04em;margin:0 0 var(--space-3)}
+    .hero p{margin:0;color:var(--color-text-muted);max-width:64ch}
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4)}
+    .kpi{padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid color-mix(in srgb,var(--color-text) 8%,transparent)}
+    .kpi span{display:block;font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted);margin-bottom:var(--space-2)}
+    .kpi strong{font-size:var(--text-lg);font-variant-numeric:tabular-nums lining-nums}
+    .layout{display:grid;grid-template-columns:minmax(0,1.12fr) 390px;gap:var(--space-5)}
+    .stack{display:flex;flex-direction:column;gap:var(--space-5)}
+    .panel h3,.result-card h3,.step-card h3,.table-card h3{margin:0 0 var(--space-4);font-size:var(--text-lg)}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-4)}
+    .section-title p{margin:0;color:var(--color-text-muted);font-size:var(--text-sm)}
+    .nav-group{display:flex;flex-direction:column;gap:var(--space-2)}
+    .nav-btn,.formula-btn{width:100%;text-align:left;padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);border:1px solid transparent;background:transparent;min-height:44px}
+    .nav-btn:hover,.formula-btn:hover,.nav-btn:focus-visible,.formula-btn:focus-visible{background:var(--color-surface-2);border-color:color-mix(in srgb,var(--color-text) 8%,transparent)}
+    .nav-btn.active,.formula-btn.active{background:var(--color-primary-highlight);color:var(--color-primary-hover);border-color:color-mix(in srgb,var(--color-primary) 25%,transparent)}
+    .nav-btn small,.formula-btn small{display:block;color:var(--color-text-muted);margin-top:.2rem}
+    .formula-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+    .formula-token{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--text-xs);display:inline-block;padding:.28rem .5rem;border-radius:var(--radius-full);background:color-mix(in srgb,var(--color-blue) 10%,var(--color-surface-2));color:var(--color-blue);margin-top:var(--space-2)}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4)}
+    .field{display:grid;gap:var(--space-2)}
+    .field.full{grid-column:1/-1}
+    .field label{font-size:var(--text-sm);font-weight:700}
+    .field .meta{font-size:var(--text-xs);color:var(--color-text-muted)}
+    .control-wrap{display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:var(--space-2)}
+    .field input,.field select,.field textarea{width:100%;min-height:44px;padding:.78rem .9rem;border-radius:var(--radius-md);border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent);background:var(--color-surface-2)}
+    .field textarea{min-height:90px;resize:vertical}
+    .field.invalid input,.field.invalid select,.field.invalid textarea{border-color:color-mix(in srgb,var(--color-error) 60%,transparent);background:color-mix(in srgb,var(--color-error) 8%,var(--color-surface-2))}
+    .error-text{font-size:var(--text-xs);color:var(--color-error);min-height:1rem}
+    .actions{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-4)}
+    .btn{min-height:44px;padding:.78rem 1rem;border-radius:var(--radius-md);border:1px solid transparent;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:.45rem}
+    .btn-primary{background:var(--color-primary);color:var(--color-text-inverse)} .btn-primary:hover{background:var(--color-primary-hover)}
+    .btn-secondary{background:var(--color-surface-2);border-color:color-mix(in srgb,var(--color-text) 12%,transparent)}
+    .result-value{font-size:clamp(1.95rem,1.2rem + 1.8vw,3rem);line-height:1;font-weight:900;letter-spacing:-.05em;font-variant-numeric:tabular-nums lining-nums;margin-bottom:var(--space-2)}
+    .result-caption{color:var(--color-text-muted);margin-bottom:var(--space-4)}
+    .metric-list,.step-list{display:grid;gap:var(--space-3)}
+    .metric{display:flex;justify-content:space-between;gap:var(--space-3);padding-bottom:var(--space-3);border-bottom:1px solid var(--color-divider)}
+    .metric:last-child{border-bottom:0;padding-bottom:0}
+    .metric span{color:var(--color-text-muted);font-size:var(--text-sm)}
+    .metric strong{font-variant-numeric:tabular-nums lining-nums;text-align:right}
+    .equation{padding:var(--space-4);background:var(--color-surface-2);border-radius:var(--radius-lg);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--text-sm);overflow:auto;margin-top:var(--space-4)}
+    .status{display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .6rem;border-radius:var(--radius-full);font-size:var(--text-xs);background:var(--color-primary-highlight);color:var(--color-primary-hover)}
+    .status.dot:before{content:'';width:.48rem;height:.48rem;border-radius:50%;background:currentColor}
+    .step-card ol{margin:0;padding-left:1.1rem;display:grid;gap:var(--space-3)}
+    .step-card li{padding-left:.2rem}
+    .step-card li strong{display:block;margin-bottom:.2rem}
+    .table-card table{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
+    .table-card th,.table-card td{padding:.75rem .25rem;border-bottom:1px solid var(--color-divider);text-align:left;vertical-align:top}
+    .table-card th{position:sticky;top:0;background:var(--color-surface);z-index:1;font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)}
+    .history-empty{padding:var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface-2);color:var(--color-text-muted)}
+    .pill-row{display:flex;gap:var(--space-2);flex-wrap:wrap}
+    @media (max-width: 1180px){.layout{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.result-card{position:static}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (max-width: 920px){html,body{overflow:auto}.dashboard{display:block;height:auto}.sidebar{border-right:0;border-bottom:1px solid color-mix(in srgb,var(--color-text) 10%,transparent)}.header{position:sticky}.main{overflow:visible;padding:var(--space-4)}.formula-list,.form-grid{grid-template-columns:1fr}.control-wrap{grid-template-columns:1fr}.header{padding:var(--space-4)}.sidebar{padding:var(--space-4)}}
+    @media (max-width: 640px){.kpi-grid{grid-template-columns:1fr}.header-actions{width:100%;justify-content:space-between}}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="dashboard">
+    <aside class="sidebar" aria-label="Formula categories">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" aria-label="Supply Chain Calculator logo" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="10" width="18" height="18" rx="4" stroke="currentColor" stroke-width="4"/>
+          <rect x="38" y="10" width="18" height="18" rx="4" stroke="currentColor" stroke-width="4"/>
+          <rect x="23" y="36" width="18" height="18" rx="4" stroke="currentColor" stroke-width="4"/>
+          <path d="M26 19h12M17 28v8M47 28v8M26 45h-3M41 45h-3" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h1>Supply Chain Calculator</h1>
+          <p></p>
+        </div>
+      </div>
+      <div class="panel" style="padding:var(--space-4)">
+        
+        
+      </div>
+      <div>
+        <div class="section-title">
+          <h3 style="margin:0;font-size:var(--text-sm);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Formula groups</h3>
+        </div>
+        <div id="categoryList" class="nav-group"></div>
+      </div>
+      <div class="panel" style="padding:var(--space-4)">
+        <h3 style="margin:0 0 var(--space-3);font-size:var(--text-base)">Validation rules</h3>
+        <div class="metric-list">
+          <div class="metric"><span>Stable queue</span><strong>u &lt; 1</strong></div>
+          <div class="metric"><span>Service level</span><strong>0 to 1</strong></div>
+          <div class="metric"><span>Time units</span><strong>Must match</strong></div>
+        </div>
+      </div>
+    </aside>
+
+    <header class="header">
+      <div>
+        
+        
+      </div>
+      <div class="header-actions">
+        <button id="downloadCsvBtn" class="btn btn-secondary" type="button">Download final CSV</button>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">◐</button>
+      </div>
+    </header>
+
+    <main id="main" class="main">
+      <section class="hero">
+        <div class="card">
+          <h2>Move from formulas to decisions faster.</h2>
+          <p>This version adds executive-style KPI framing, step-by-step explanation logic, and unit-aware validation so users can understand both the answer and the calculation path.</p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><span>Formula families</span><strong>8</strong></div>
+          <div class="kpi"><span>Built-in models</span><strong>14</strong></div>
+          <div class="kpi"><span>CSV export</span><strong>Final only</strong></div>
+          <div class="kpi"><span>Validation mode</span><strong>Active</strong></div>
+        </div>
+      </section>
+
+      <section class="layout">
+        <div class="stack">
+          <section class="panel">
+            <div class="section-title">
+              <div>
+                <h3 id="sectionTitle">Formulas</h3>
+                <p id="sectionSubtitle">Choose a model and set your assumptions.</p>
+              </div>
+            </div>
+            <div id="formulaList" class="formula-list"></div>
+          </section>
+
+          <section class="panel">
+            <div class="section-title">
+              <div>
+                <h3 id="inputTitle">Inputs and units</h3>
+                <p>Values must use internally consistent units.</p>
+              </div>
+            </div>
+            <div id="inputContainer"></div>
+            <div class="actions">
+              <button id="calculateBtn" class="btn btn-primary" type="button">Calculate</button>
+              <button id="resetBtn" class="btn btn-secondary" type="button">Reset inputs</button>
+            </div>
+          </section>
+
+          <section class="step-card" aria-labelledby="stepsTitle">
+            <h3 id="stepsTitle">Step-by-step explanation</h3>
+            <div id="stepList"></div>
+          </section>
+
+          <section class="table-card" aria-labelledby="historyTitle">
+            <div class="section-title">
+              <div>
+                <h3 id="historyTitle">Final outputs</h3>
+                <p>Only final result rows are exported to CSV.</p>
+              </div>
+            </div>
+            <div id="historyWrap" class="history-empty">No results yet. Run a calculation to build the export table.</div>
+          </section>
+        </div>
+
+        <aside class="stack">
+          <section class="result-card" aria-live="polite">
+            <h3>Result summary</h3>
+            <div id="resultValue" class="result-value">—</div>
+            <div id="resultCaption" class="result-caption">Select a formula and calculate.</div>
+            <div id="resultMetrics" class="metric-list"></div>
+            <div id="equationBlock" class="equation">Equation will appear here.</div>
+          </section>
+
+          <section class="panel">
+            <h3>Assumption checklist</h3>
+            <div class="pill-row">
+              <span class="status">Same time basis</span>
+              <span class="status">Positive inputs</span>
+              <span class="status">Units selected</span>
+            </div>
+            <p class="subtle" style="margin-top:var(--space-4)">For queueing, inter-arrival and processing times should use the same time unit. For replenishment models, demand rate, lead time, and demand variability should align.</p>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const unitOptions = {
+      flowRate: ['units/day','units/week','units/hour','customers/hour'],
+      time: ['days','weeks','hours','minutes'],
+      inventory: ['units','customers','jobs'],
+      currency: ['USD','EUR','INR'],
+      percent: ['fraction'],
+      demandStd: ['units/day','units/week','units/hour'],
+      count: ['servers','jobs','customers'],
+      custom: ['custom']
+    };
+
+    const categories = [
+      {
+        id:'core', name:'Core process flow', blurb:'Little’s Law, turnover, and efficiency.',
+        formulas:[
+          {
+            id:'littles-law', name:"Little's Law", short:'Inventory from rate and time', token:'I = R × T',
+            description:'Computes average inventory using throughput and flow time.',
+            inputs:[
+              {key:'R',label:'Flow rate (R)',hint:'Units processed per time period',type:'number',value:20,unitType:'flowRate'},
+              {key:'T',label:'Flow time (T)',hint:'Average time in system',type:'number',value:5,unitType:'time'}
+            ],
+            validate:(v,u)=> sameTimeBase(['R'],['T'],u),
+            compute:(v)=>({primaryLabel:'Inventory (I)',primaryValue:v.R*v.T,details:[['Flow rate',v.R],['Flow time',v.T],['Implied turnover',1/v.T]],equation:'I = R × T',steps:[`Take throughput R = ${v.R}.`,`Take flow time T = ${v.T}.`,`Multiply throughput by flow time: I = ${v.R} × ${v.T}.`,`Inventory equals ${fmt(v.R*v.T)}.`]})
+          },
+          {
+            id:'turnover', name:'Turnover', short:'Inventory turns', token:'Turnover = R / I = 1 / T',
+            description:'Calculates turns from throughput and inventory and compares with flow time.',
+            inputs:[
+              {key:'R',label:'Flow rate (R)',hint:'Units per time period',type:'number',value:100,unitType:'flowRate'},
+              {key:'I',label:'Inventory (I)',hint:'Average inventory level',type:'number',value:25,unitType:'inventory'},
+              {key:'T',label:'Flow time (T)',hint:'Optional cross-check',type:'number',value:0.25,unitType:'time'}
+            ],
+            validate:(v,u)=> sameTimeBase(['R'],['T'],u),
+            compute:(v)=>{const turn=v.R/v.I;return {primaryLabel:'Turnover',primaryValue:turn,details:[['R / I',turn],['1 / T',1/v.T],['Flow time',v.T]],equation:'Turnover = R / I = 1 / T',steps:[`Use throughput R = ${v.R} and inventory I = ${v.I}.`,`Compute turns from R / I = ${fmt(turn)}.`,`Cross-check using 1 / T = ${fmt(1/v.T)}.`,`The system turns inventory ${fmt(turn)} times per period.`]}}
+          },
+          {
+            id:'fte', name:'Flow time efficiency', short:'Ideal time vs actual time', token:'FTE = Theoretical / Actual',
+            description:'Shows how much of actual flow time is value-adding theoretical time.',
+            inputs:[
+              {key:'theoretical',label:'Theoretical flow time',hint:'Ideal process time',type:'number',value:2,unitType:'time'},
+              {key:'actual',label:'Actual flow time',hint:'Observed time',type:'number',value:5,unitType:'time'}
+            ],
+            validate:(v,u)=> sameUnits(['theoretical','actual'],u),
+            compute:(v)=>({primaryLabel:'Flow time efficiency',primaryValue:v.theoretical/v.actual,primaryFormat:'percent',details:[['Theoretical flow time',v.theoretical],['Actual flow time',v.actual],['Waiting/non-value share',1-(v.theoretical/v.actual)]],equation:'FTE = Theoretical flow time / Actual flow time',steps:[`Start with theoretical time = ${v.theoretical}.`,`Use actual time = ${v.actual}.`,`Divide ideal by actual: ${v.theoretical} / ${v.actual} = ${fmt(v.theoretical/v.actual,'percent')}.`,`Higher percentages mean less waiting and less waste.`]})
+          }
+        ]
+      },
+      {
+        id:'capacity', name:'Capacity and utilization', blurb:'Single server, parallel servers, and load.',
+        formulas:[
+          {
+            id:'single-capacity', name:'Single-server capacity', short:'Capacity of one resource', token:'Capacity = 1 / p',
+            description:'Maximum output rate from one server.',
+            inputs:[{key:'p',label:'Processing time per job (p)',hint:'Time per job',type:'number',value:0.5,unitType:'time'}],
+            compute:(v,u)=>({primaryLabel:'Capacity',primaryValue:1/v.p,details:[['Processing time',v.p],['Output unit basis',u.p]],equation:'Capacity = 1 / p',steps:[`Set average processing time p = ${v.p}.`,`Invert the time per job: 1 / ${v.p}.`,`Capacity equals ${fmt(1/v.p)} jobs per selected time base.`]})
+          },
+          {
+            id:'parallel-capacity', name:'Parallel servers capacity', short:'Capacity across identical servers', token:'Rp = m × (1 / p)',
+            description:'Total capacity with identical parallel servers.',
+            inputs:[
+              {key:'m',label:'Number of servers (m)',hint:'Parallel resources',type:'number',value:4,unitType:'count'},
+              {key:'p',label:'Processing time per job (p)',hint:'Time per job',type:'number',value:0.5,unitType:'time'}
+            ],
+            compute:(v)=>({primaryLabel:'Parallel capacity (Rp)',primaryValue:v.m*(1/v.p),details:[['Servers',v.m],['Per-server capacity',1/v.p]],equation:'Rp = m × (1 / p)',steps:[`Each server processes 1 / p = ${fmt(1/v.p)} jobs per period.`,`There are m = ${v.m} identical servers.`,`Multiply m by per-server capacity: ${v.m} × ${fmt(1/v.p)} = ${fmt(v.m*(1/v.p))}.`]})
+          },
+          {
+            id:'utilization', name:'Utilization', short:'Demand vs available capacity', token:'u = Ra / Rp = p / (m × a)',
+            description:'Share of available capacity being used.',
+            inputs:[
+              {key:'Ra',label:'Arrival rate (Ra)',hint:'Jobs demanded per period',type:'number',value:6,unitType:'flowRate'},
+              {key:'m',label:'Number of servers (m)',hint:'Parallel resources',type:'number',value:4,unitType:'count'},
+              {key:'p',label:'Processing time (p)',hint:'Time per job',type:'number',value:0.5,unitType:'time'},
+              {key:'a',label:'Time between arrivals (a)',hint:'Time per arrival',type:'number',value:0.6,unitType:'time'}
+            ],
+            validate:(v,u)=> sameUnits(['p','a'],u),
+            compute:(v)=>{const Rp=v.m*(1/v.p);const u=v.Ra/Rp;return {primaryLabel:'Utilization (u)',primaryValue:u,primaryFormat:'percent',details:[['Demand rate Ra',v.Ra],['Capacity Rp',Rp],['Time-form utilization',v.p/(v.m*v.a)]],equation:'u = Ra / Rp = p / (m × a)',steps:[`Compute capacity Rp = m × (1 / p) = ${v.m} × ${fmt(1/v.p)} = ${fmt(Rp)}.`,`Use demand rate Ra = ${v.Ra}.`,`Divide demand by capacity: ${v.Ra} / ${fmt(Rp)} = ${fmt(u,'percent')}.`,`Utilization above 100% signals an unstable process.`]}}
+          }
+        ]
+      },
+      {
+        id:'queue', name:'Queueing', blurb:'Waiting time and queue inventory.',
+        formulas:[
+          {
+            id:'queue-wait', name:'Average waiting time in queue', short:'Queue wait from variability and load', token:'Tq = variability × congestion × p',
+            description:'Approximates expected waiting time under variability and utilization.',
+            inputs:[
+              {key:'CVa',label:'Arrival CV (CVa)',hint:'σa / a',type:'number',value:1,unitType:'custom'},
+              {key:'CVp',label:'Processing CV (CVp)',hint:'σp / p',type:'number',value:1,unitType:'custom'},
+              {key:'u',label:'Utilization (u)',hint:'Must be below 1',type:'number',value:0.8,unitType:'percent'},
+              {key:'m',label:'Number of servers (m)',hint:'Parallel resources',type:'number',value:2,unitType:'count'},
+              {key:'p',label:'Average processing time (p)',hint:'Time per job',type:'number',value:0.5,unitType:'time'}
+            ],
+            validate:(v)=>{const errors={}; if(!(v.u>0 && v.u<1)) errors.u='Utilization must be greater than 0 and less than 1.'; if(v.m<=0) errors.m='Servers must be positive.'; return errors;},
+            compute:(v)=>{const variability=((v.CVa**2)+(v.CVp**2))/2;const exponent=Math.sqrt(2*(v.m+1))-1;const congestion=(v.u**exponent)/(v.m*(1-v.u));const tq=variability*congestion*v.p;return {primaryLabel:'Average queue wait (Tq)',primaryValue:tq,details:[['Variability factor',variability],['Congestion factor',congestion],['Utilization',v.u]],equation:'Tq = ((CVa² + CVp²)/2) × (u^(√(2(m+1))−1) / (m(1−u))) × p',steps:[`Compute variability = (CVa² + CVp²) / 2 = ${fmt(variability)}.`,`Compute exponent = √(2(m+1)) − 1 = ${fmt(exponent)}.`,`Compute congestion = u^exponent / (m(1-u)) = ${fmt(congestion)}.`,`Multiply variability × congestion × p = ${fmt(tq)}.`]}}
+          },
+          {
+            id:'queue-customers', name:'Average customers waiting', short:'Queue length from wait time', token:'Iq = Ra × Tq = Tq / a',
+            description:'Converts waiting time into average queue size.',
+            inputs:[
+              {key:'Ra',label:'Arrival rate (Ra)',hint:'Customers per period',type:'number',value:6,unitType:'flowRate'},
+              {key:'Tq',label:'Queue wait (Tq)',hint:'Time waiting in queue',type:'number',value:0.3,unitType:'time'},
+              {key:'a',label:'Time between arrivals (a)',hint:'Time per arrival',type:'number',value:0.1667,unitType:'time'}
+            ],
+            validate:(v,u)=> sameUnits(['Tq','a'],u),
+            compute:(v)=>({primaryLabel:'Average queue inventory (Iq)',primaryValue:v.Ra*v.Tq,details:[['Ra × Tq',v.Ra*v.Tq],['Tq / a',v.Tq/v.a]],equation:'Iq = Ra × Tq = Tq / a',steps:[`Start with arrival rate Ra = ${v.Ra}.`,`Use queue wait Tq = ${v.Tq}.`,`Multiply Ra × Tq to get Iq = ${fmt(v.Ra*v.Tq)}.`,`Cross-check with Tq / a = ${fmt(v.Tq/v.a)}.`]})
+          }
+        ]
+      },
+      {
+        id:'single-discrete', name:'Single-period discrete demand', blurb:'Critical ratio and discrete-order logic.',
+        formulas:[
+          {id:'critical-discrete', name:'Critical ratio', short:'Service level target', token:'SL* = Cu / (Cu + Co)', description:'Target service level for single-period stocking.', inputs:[{key:'Cu',label:'Underage cost (Cu)',hint:'Missed sale cost',type:'number',value:12,unitType:'currency'},{key:'Co',label:'Overage cost (Co)',hint:'Cost minus salvage',type:'number',value:5,unitType:'currency'}], validate:(v,u)=> sameUnits(['Cu','Co'],u), compute:(v)=>({primaryLabel:'Critical ratio',primaryValue:v.Cu/(v.Cu+v.Co),primaryFormat:'percent',details:[['Underage cost',v.Cu],['Overage cost',v.Co]],equation:'SL* = Cu / (Cu + Co)',steps:[`Add underage and overage costs: ${v.Cu} + ${v.Co} = ${fmt(v.Cu+v.Co)}.`,`Divide Cu by total cost: ${v.Cu} / ${fmt(v.Cu+v.Co)}.`,`Critical ratio equals ${fmt(v.Cu/(v.Cu+v.Co),'percent')}.`]})},
+          {id:'optimal-discrete', name:'Optimal order from discrete distribution', short:'Choose first quantity above target service level', token:'Q* = first cumulative quantity ≥ SL*', description:'Enter quantity:probability pairs separated by commas.', inputs:[{key:'Cu',label:'Underage cost (Cu)',hint:'Missed sale cost',type:'number',value:12,unitType:'currency'},{key:'Co',label:'Overage cost (Co)',hint:'Cost minus salvage',type:'number',value:5,unitType:'currency'},{key:'distribution',label:'Demand distribution',hint:'Example: 80:0.10, 90:0.20, 100:0.35',type:'textarea',value:'80:0.10, 90:0.20, 100:0.35, 110:0.20, 120:0.15',unitType:'custom'}], validate:(v)=>{const e={}; if(!String(v.distribution).includes(':')) e.distribution='Enter quantity:probability pairs.'; return e;}, compute:(v)=>{const sl=v.Cu/(v.Cu+v.Co);const pairs=String(v.distribution).split(',').map(s=>s.trim()).filter(Boolean).map(s=>{const [q,p]=s.split(':').map(Number);return {q,p};}).filter(d=>Number.isFinite(d.q)&&Number.isFinite(d.p)).sort((a,b)=>a.q-b.q);let cum=0, chosen=pairs.length?pairs[pairs.length-1].q:NaN;const ladder=[];for(const item of pairs){cum+=item.p;ladder.push(`${item.q} → ${cum.toFixed(3)}`);if(cum>=sl){chosen=item.q;break;}}return {primaryLabel:'Optimal order (Q*)',primaryValue:chosen,details:[['Critical ratio',sl],['CDF path',ladder.join(' | ')]],equation:'Q* = first quantity for which cumulative probability exceeds SL*',steps:[`Compute service level target SL* = ${fmt(sl,'percent')}.`,`Build the cumulative demand distribution from the probability pairs.`,`Move up the CDF until cumulative probability exceeds the service level target.`,`The first qualifying quantity is Q* = ${fmt(chosen)}.`]}}
+          }
+        ]
+      },
+      {
+        id:'single-normal', name:'Single-period normal demand', blurb:'Critical ratio and normal-based Q*.',
+        formulas:[
+          {id:'critical-normal', name:'Critical ratio', short:'Normal-demand service level target', token:'SL* = Cu / (Cu + Co)', description:'Service level target for normal-demand case.', inputs:[{key:'Cu',label:'Underage cost (Cu)',hint:'Missed sale cost',type:'number',value:12,unitType:'currency'},{key:'Co',label:'Overage cost (Co)',hint:'Cost minus salvage',type:'number',value:5,unitType:'currency'}], validate:(v,u)=> sameUnits(['Cu','Co'],u), compute:(v)=>({primaryLabel:'Critical ratio',primaryValue:v.Cu/(v.Cu+v.Co),primaryFormat:'percent',details:[['Underage cost',v.Cu],['Overage cost',v.Co]],equation:'SL* = Cu / (Cu + Co)',steps:[`Use the same critical-ratio logic as the discrete case.`,`Compute ${v.Cu} / (${v.Cu} + ${v.Co}).`,`Service level target equals ${fmt(v.Cu/(v.Cu+v.Co),'percent')}.`]})},
+          {id:'optimal-normal', name:'Optimal order under normal demand', short:'Order quantity using z-score', token:'Q* = μ + z × σ', description:'Converts service level to z-score and applies it to demand variability.', inputs:[{key:'Cu',label:'Underage cost (Cu)',hint:'Missed sale cost',type:'number',value:12,unitType:'currency'},{key:'Co',label:'Overage cost (Co)',hint:'Cost minus salvage',type:'number',value:5,unitType:'currency'},{key:'mu',label:'Mean demand (μ)',hint:'Average expected demand',type:'number',value:100,unitType:'inventory'},{key:'sigma',label:'Demand standard deviation (σ)',hint:'Demand spread',type:'number',value:15,unitType:'inventory'}], validate:(v,u)=> sameUnits(['mu','sigma'],u), compute:(v)=>{const sl=v.Cu/(v.Cu+v.Co);const z=normInv(sl);const q=v.mu+z*v.sigma;return {primaryLabel:'Optimal order (Q*)',primaryValue:q,details:[['Service level',sl],['z-value',z],['Mean demand',v.mu],['Demand deviation',v.sigma]],equation:'Q* = μ + z × σ',steps:[`Compute service level SL* = ${fmt(sl,'percent')}.`,`Convert SL* to z-value: z = ${fmt(z)}.`,`Multiply z by σ: ${fmt(z)} × ${v.sigma} = ${fmt(z*v.sigma)}.`,`Add to μ: ${v.mu} + ${fmt(z*v.sigma)} = ${fmt(q)}.`]}}
+          }
+        ]
+      },
+      {
+        id:'multi-known', name:'Multi-period known demand', blurb:'Economic order quantity.',
+        formulas:[
+          {id:'eoq', name:'EOQ / optimal order quantity', short:'Balance ordering and holding costs', token:'Q* = √(2KR / h)', description:'Calculates the economic order quantity.', inputs:[{key:'K',label:'Fixed order cost (K)',hint:'Cost per replenishment',type:'number',value:250,unitType:'currency'},{key:'R',label:'Demand rate (R)',hint:'Units per period',type:'number',value:10000,unitType:'flowRate'},{key:'h',label:'Holding cost (h)',hint:'Cost per unit per period',type:'number',value:4,unitType:'currency'}], compute:(v)=>{const q=Math.sqrt((2*v.K*v.R)/v.h);return {primaryLabel:'Optimal order quantity (Q*)',primaryValue:q,details:[['Order cost',v.K],['Demand rate',v.R],['Holding cost',v.h]],equation:'Q* = √(2 × K × R / h)',steps:[`Multiply 2 × K × R = ${fmt(2*v.K*v.R)}.`,`Divide by h: ${fmt((2*v.K*v.R)/v.h)}.`,`Take the square root to get Q* = ${fmt(q)}.`]}}
+          }
+        ]
+      },
+      {
+        id:'multi-sl', name:'Random demand, service level given', blurb:'EOQ plus ROP and safety stock.',
+        formulas:[
+          {id:'random-sl', name:'Q*, ROP, and safety stock', short:'Replenishment policy from target service level', token:'ROP = R×L + zσ√L', description:'Calculates EOQ, safety stock, and reorder point from a given service level.', inputs:[{key:'K',label:'Fixed order cost (K)',hint:'Cost per replenishment',type:'number',value:250,unitType:'currency'},{key:'R',label:'Demand rate (R)',hint:'Units per period',type:'number',value:100,unitType:'flowRate'},{key:'h',label:'Holding cost (h)',hint:'Cost per unit per period',type:'number',value:4,unitType:'currency'},{key:'L',label:'Lead time (L)',hint:'Time periods',type:'number',value:2,unitType:'time'},{key:'SL',label:'Service level (SL)',hint:'Between 0 and 1',type:'number',value:0.95,unitType:'percent'},{key:'sigma',label:'Demand standard deviation (σ)',hint:'Per period deviation',type:'number',value:20,unitType:'inventory'}], validate:(v)=>validateService(v), compute:(v)=>{const z=normInv(v.SL);const q=Math.sqrt((2*v.K*v.R)/v.h);const ss=z*v.sigma*Math.sqrt(v.L);const rop=v.R*v.L+ss;return {primaryLabel:'Reorder point (ROP)',primaryValue:rop,details:[['Optimal order Q*',q],['Safety stock',ss],['z-value',z],['Service level',v.SL]],equation:'ROP = R × L + z × σ × √L',steps:[`Compute EOQ: Q* = ${fmt(q)}.`,`Convert service level ${fmt(v.SL,'percent')} to z = ${fmt(z)}.`,`Compute safety stock = z × σ × √L = ${fmt(ss)}.`,`Compute reorder point = R × L + SS = ${fmt(rop)}.`]}}
+          }
+        ]
+      },
+      {
+        id:'multi-backorders', name:'Random demand with backorders', blurb:'Backorder-driven service level and policy.',
+        formulas:[
+          {id:'backorders', name:'Backorders policy', short:'Critical ratio with backorder cost', token:'SL* = b / (b + h)', description:'Derives service level from backorder and holding cost, then computes ROP and safety stock.', inputs:[{key:'K',label:'Fixed order cost (K)',hint:'Cost per replenishment',type:'number',value:250,unitType:'currency'},{key:'R',label:'Demand rate (R)',hint:'Units per period',type:'number',value:100,unitType:'flowRate'},{key:'h',label:'Holding cost (h)',hint:'Cost per unit per period',type:'number',value:4,unitType:'currency'},{key:'L',label:'Lead time (L)',hint:'Time periods',type:'number',value:2,unitType:'time'},{key:'b',label:'Backorder cost (b)',hint:'Penalty cost per unit',type:'number',value:18,unitType:'currency'},{key:'sigma',label:'Demand standard deviation (σ)',hint:'Per period deviation',type:'number',value:20,unitType:'inventory'}], compute:(v)=>{const sl=v.b/(v.b+v.h);const z=normInv(sl);const q=Math.sqrt((2*v.K*v.R)/v.h);const ss=z*v.sigma*Math.sqrt(v.L);const rop=v.R*v.L+ss;return {primaryLabel:'Reorder point (ROP)',primaryValue:rop,details:[['Critical ratio / SL*',sl],['Optimal order Q*',q],['Safety stock',ss],['z-value',z]],equation:'SL* = b / (b + h)',steps:[`Compute service level target = b / (b + h) = ${fmt(sl,'percent')}.`,`Convert the service level to z = ${fmt(z)}.`,`Compute safety stock = ${fmt(ss)}.`,`Compute reorder point = R × L + SS = ${fmt(rop)}.`]}}
+          }
+        ]
+      },
+      {
+        id:'multi-lost', name:'Random demand with lost sales', blurb:'Margin-based critical ratio and policy.',
+        formulas:[
+          {id:'lost-sales', name:'Lost sales policy', short:'Service level from unit margin', token:'SL* = pR / (pR + hQ)', description:'Uses margin and carrying cost to determine service level and replenishment values.', inputs:[{key:'K',label:'Fixed order cost (K)',hint:'Cost per replenishment',type:'number',value:250,unitType:'currency'},{key:'R',label:'Demand rate (R)',hint:'Units per period',type:'number',value:100,unitType:'flowRate'},{key:'h',label:'Holding cost (h)',hint:'Cost per unit per period',type:'number',value:4,unitType:'currency'},{key:'L',label:'Lead time (L)',hint:'Time periods',type:'number',value:2,unitType:'time'},{key:'margin',label:'Unit margin p = price - cost',hint:'Contribution margin per unit',type:'number',value:12,unitType:'currency'},{key:'sigma',label:'Demand standard deviation (σ)',hint:'Per period deviation',type:'number',value:20,unitType:'inventory'}], compute:(v)=>{const q=Math.sqrt((2*v.K*v.R)/v.h);const sl=(v.margin*v.R)/((v.margin*v.R)+(v.h*q));const z=normInv(sl);const ss=z*v.sigma*Math.sqrt(v.L);const rop=v.R*v.L+ss;return {primaryLabel:'Reorder point (ROP)',primaryValue:rop,details:[['Critical ratio / SL*',sl],['Optimal order Q*',q],['Safety stock',ss],['z-value',z]],equation:'SL* = pR / (pR + hQ)',steps:[`Compute EOQ first: Q* = ${fmt(q)}.`,`Compute service level target = pR / (pR + hQ) = ${fmt(sl,'percent')}.`,`Convert service level to z = ${fmt(z)} and compute safety stock = ${fmt(ss)}.`,`Compute reorder point = R × L + SS = ${fmt(rop)}.`]}}
+          }
+        ]
+      }
+    ];
+
+    const state = {categoryIndex:0, formulaIndex:0, history:[]};
+    const categoryList = document.getElementById('categoryList');
+    const formulaList = document.getElementById('formulaList');
+    const inputContainer = document.getElementById('inputContainer');
+    const resultValue = document.getElementById('resultValue');
+    const resultCaption = document.getElementById('resultCaption');
+    const resultMetrics = document.getElementById('resultMetrics');
+    const equationBlock = document.getElementById('equationBlock');
+    const stepList = document.getElementById('stepList');
+    const sectionTitle = document.getElementById('sectionTitle');
+    const sectionSubtitle = document.getElementById('sectionSubtitle');
+    const historyWrap = document.getElementById('historyWrap');
+
+    function currentCategory(){return categories[state.categoryIndex]}
+    function currentFormula(){return currentCategory().formulas[state.formulaIndex]}
+    function fmt(value, mode='number'){ if(!Number.isFinite(value)) return '—'; if(mode==='percent') return `${(value*100).toFixed(2)}%`; if(Math.abs(value)>=1000) return value.toLocaleString(undefined,{maximumFractionDigits:2}); return value.toFixed(Math.abs(value)>=100?2:4).replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/,'$1'); }
+    function normInv(p){ if(!(p>0&&p<1)){ if(p===0) return -Infinity; if(p===1) return Infinity; throw new Error('Service level must be between 0 and 1.'); } const a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.357751867269,-30.66479806614716,2.506628277459239],b=[-54.47609879822406,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572],c=[-0.007784894002430293,-0.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783],d=[0.007784695709041462,0.3224671290700398,2.445134137142996,3.754408661907416]; const pl=0.02425, ph=1-pl; let q,r; if(p<pl){q=Math.sqrt(-2*Math.log(p)); return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);} if(p>ph){q=Math.sqrt(-2*Math.log(1-p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);} q=p-.5; r=q*q; return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/((((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r)+1); }
+
+    function sameUnits(keys, units){ const first = units[keys[0]]; const errors={}; keys.forEach(k=>{ if(units[k]!==first) errors[k]='Units must match across these inputs.'; }); return errors; }
+    function sameTimeBase(rateKeys,timeKeys,units){ const errors={}; [...rateKeys,...timeKeys].forEach(k=>{ if(!units[k]) errors[k]='Select a unit.'; }); return errors; }
+    function validateService(v){ const errors={}; if(!(v.SL>0 && v.SL<1)) errors.SL='Service level must be between 0 and 1.'; if(v.L<0) errors.L='Lead time must be zero or positive.'; return errors; }
+
+    function getDefaultUnit(unitType){ return unitOptions[unitType]?.[0] || 'custom'; }
+    function renderCategories(){ categoryList.innerHTML=''; categories.forEach((cat, idx)=>{ const btn=document.createElement('button'); btn.type='button'; btn.className=`nav-btn ${idx===state.categoryIndex?'active':''}`; btn.innerHTML=`<strong>${cat.name}</strong><small>${cat.blurb}</small>`; btn.onclick=()=>{state.categoryIndex=idx; state.formulaIndex=0; renderAll();}; categoryList.appendChild(btn); }); }
+    function renderFormulas(){ const cat=currentCategory(); sectionTitle.textContent=cat.name; sectionSubtitle.textContent=cat.blurb; formulaList.innerHTML=''; cat.formulas.forEach((f,idx)=>{ const btn=document.createElement('button'); btn.type='button'; btn.className=`formula-btn ${idx===state.formulaIndex?'active':''}`; btn.innerHTML=`<strong>${f.name}</strong><small>${f.short}</small><span class="formula-token">${f.token}</span>`; btn.onclick=()=>{state.formulaIndex=idx; renderAll();}; formulaList.appendChild(btn); }); }
+    function renderInputs(){ const formula=currentFormula(); inputContainer.innerHTML=''; const grid=document.createElement('div'); grid.className='form-grid'; formula.inputs.forEach(input=>{ const field=document.createElement('div'); field.className=`field ${input.type==='textarea'?'full':''}`; const unitChoices=unitOptions[input.unitType]||['custom']; const unitSelect = unitChoices.length ? `<select id="unit-${input.key}" data-unit-for="${input.key}">${unitChoices.map(u=>`<option value="${u}">${u}</option>`).join('')}</select>` : '';
+      const inputHtml = input.type==='textarea'
+        ? `<textarea id="field-${input.key}">${input.value}</textarea>`
+        : `<input id="field-${input.key}" type="number" step="any" value="${input.value}" />`;
+      field.innerHTML=`<label for="field-${input.key}">${input.label}</label><div class="meta">${input.hint}</div><div class="control-wrap">${inputHtml}${unitSelect}</div><div class="error-text" id="error-${input.key}"></div>`;
+      grid.appendChild(field);
+    }); inputContainer.appendChild(grid); resultValue.textContent='—'; resultCaption.textContent='Calculate to see the final output.'; resultMetrics.innerHTML=''; equationBlock.textContent=formula.token; stepList.innerHTML='<p class="subtle">The explanation will update after calculation.</p>'; formula.inputs.forEach(input=>{ const unitField=document.getElementById(`unit-${input.key}`); if(unitField) unitField.value=getDefaultUnit(input.unitType); }); }
+    function collectValues(){ const formula=currentFormula(); const values={}, units={}; formula.inputs.forEach(input=>{ const valNode=document.getElementById(`field-${input.key}`); values[input.key]=input.type==='textarea'?valNode.value:Number(valNode.value); const unitNode=document.getElementById(`unit-${input.key}`); units[input.key]=unitNode ? unitNode.value : ''; }); return {values, units}; }
+    function clearErrors(){ currentFormula().inputs.forEach(input=>{ const err=document.getElementById(`error-${input.key}`); const wrap=err.closest('.field'); wrap.classList.remove('invalid'); err.textContent=''; }); }
+    function applyErrors(errors){ Object.entries(errors).forEach(([key,msg])=>{ const err=document.getElementById(`error-${key}`); if(err){ err.textContent=msg; err.closest('.field').classList.add('invalid'); } }); }
+    function renderSteps(steps){ if(!steps?.length){ stepList.innerHTML='<p class="subtle">No explanation available.</p>'; return; } const ol=document.createElement('ol'); steps.forEach(step=>{ const li=document.createElement('li'); const bits=String(step).split('. '); li.innerHTML=`<strong>Step</strong><span>${step}</span>`; ol.appendChild(li); }); stepList.innerHTML=''; stepList.appendChild(ol); }
+    function pushHistory(formula, output){ state.history.unshift({formula:formula.name, outputLabel:output.primaryLabel, outputValue:fmt(output.primaryValue, output.primaryFormat), timestamp:new Date().toLocaleString()}); state.history=state.history.slice(0,20); renderHistory(); }
+    function renderHistory(){ if(!state.history.length){ historyWrap.className='history-empty'; historyWrap.textContent='No results yet. Run a calculation to build the export table.'; return; } const table=document.createElement('table'); table.innerHTML='<thead><tr><th>Formula</th><th>Final output</th><th>Value</th><th>Calculated</th></tr></thead>'; const tbody=document.createElement('tbody'); state.history.forEach(row=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${row.formula}</td><td>${row.outputLabel}</td><td>${row.outputValue}</td><td>${row.timestamp}</td>`; tbody.appendChild(tr); }); table.appendChild(tbody); historyWrap.className=''; historyWrap.innerHTML=''; historyWrap.appendChild(table); }
+    function calculate(){ clearErrors(); const formula=currentFormula(); const {values, units}=collectValues(); let errors={}; formula.inputs.forEach(input=>{ if(input.type!=='textarea' && !Number.isFinite(values[input.key])) errors[input.key]='Enter a valid number.'; if(input.type!=='textarea' && values[input.key] < 0) errors[input.key]='Enter a zero or positive value.'; }); if(formula.validate){ errors={...errors,...formula.validate(values,units)}; }
+      if(Object.keys(errors).length){ applyErrors(errors); resultValue.textContent='Check inputs'; resultCaption.textContent='Please correct the highlighted fields.'; resultMetrics.innerHTML=''; stepList.innerHTML='<p class="subtle">Fix the input errors to see the explanation.</p>'; return; }
+      try{ const output=formula.compute(values, units); resultValue.textContent=fmt(output.primaryValue, output.primaryFormat); resultCaption.textContent=output.primaryLabel; equationBlock.textContent=output.equation; resultMetrics.innerHTML=''; (output.details||[]).forEach(([label,val])=>{ const row=document.createElement('div'); row.className='metric'; row.innerHTML=`<span>${label}</span><strong>${typeof val==='string'?val:fmt(val)}</strong>`; resultMetrics.appendChild(row); }); renderSteps(output.steps); pushHistory(formula, output); }
+      catch(err){ resultValue.textContent='Error'; resultCaption.textContent=err.message; resultMetrics.innerHTML=''; stepList.innerHTML='<p class="subtle">Unable to calculate with the current assumptions.</p>'; }
+    }
+    function resetInputs(){ renderInputs(); clearErrors(); }
+    function downloadCsv(){ if(!state.history.length){ resultCaption.textContent='Run at least one calculation before exporting.'; return; } const rows=[['Formula','Final Output','Value','Calculated At'],...state.history.map(r=>[r.formula,r.outputLabel,r.outputValue,r.timestamp])]; const csv=rows.map(r=>r.map(value=>`"${String(value).replaceAll('"','""')}"`).join(',')).join('\n'); const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='supply-chain-final-results.csv'; a.click(); URL.revokeObjectURL(a.href); }
+    function renderAll(){ renderCategories(); renderFormulas(); renderInputs(); renderHistory(); }
+
+    document.getElementById('calculateBtn').addEventListener('click', calculate);
+    document.getElementById('resetBtn').addEventListener('click', resetInputs);
+    document.getElementById('downloadCsvBtn').addEventListener('click', downloadCsv);
+
+    const themeToggle=document.querySelector('[data-theme-toggle]'); let theme=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'; document.documentElement.setAttribute('data-theme', theme);
+    function syncTheme(){ themeToggle.textContent=theme==='dark'?'☀︎':'◐'; themeToggle.setAttribute('aria-label',`Switch to ${theme==='dark'?'light':'dark'} mode`); }
+    themeToggle.addEventListener('click',()=>{ theme=theme==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme', theme); syncTheme(); }); syncTheme();
+
+    renderAll();
+  </script>
+</body>
+</html>
