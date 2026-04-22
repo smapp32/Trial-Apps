@@ -102,7 +102,53 @@
     .history-empty{padding:var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface-2);color:var(--color-text-muted)}
     .pill-row{display:flex;gap:var(--space-2);flex-wrap:wrap}
     @media (max-width: 1180px){.layout{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.result-card{position:static}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media (max-width: 920px){html,body{overflow:auto}.dashboard{display:block;height:auto}.sidebar{border-right:0;border-bottom:1px solid color-mix(in srgb,var(--color-text) 10%,transparent)}.header{position:sticky}.main{overflow:visible;padding:var(--space-4)}.formula-list,.form-grid{grid-template-columns:1fr}.control-wrap{grid-template-columns:1fr}.header{padding:var(--space-4)}.sidebar{padding:var(--space-4)}}
+    @media (max-width: 920px) {
+  html,
+  body {
+    overflow: auto;
+  }
+
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-width: 100%;
+  }
+
+  .sidebar {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+    padding: var(--space-4);
+    overflow: visible;
+  }
+
+  .header,
+  .main {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .header {
+    padding: var(--space-4);
+  }
+
+  .main {
+    overflow: visible;
+    padding: var(--space-4);
+  }
+
+  .layout,
+  .hero,
+  .formula-list,
+  .form-grid,
+  .control-wrap,
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
     @media (max-width: 640px){.kpi-grid{grid-template-columns:1fr}.header-actions{width:100%;justify-content:space-between}}
   </style>
 </head>
